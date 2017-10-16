@@ -1,0 +1,51 @@
+<script>
+  // terrible hack for PoC
+  {
+    const worker = new Worker('./worker.js');
+    window.import = async (specifier, referrer) => {
+      const channel = new MessageChannel();
+      worker.postMessage({
+        specifier: './entry.mjs',
+        referrer: null,
+        baseURI: document.baseURI,
+      }, [channel.port2]);
+      const resolved = (await {
+        then(f, r) {
+          channel.port1.onmessage = f;
+          channel.port1.onerror = r;
+        }
+      }).data;
+      const url = new URL(resolved, document.baseURI).href;
+      let id = `module${Date.now()}`;
+      while (document.getElementById(id)) {
+        id = `module${Date.now()}`;
+      }
+      const script = Object.assign(
+        document.createElement('script'),
+        {
+          type: 'module',
+          id,
+          innerText: `
+            import * as ns from ${JSON.stringify(url)};\n
+            const script = document.getElementById(${JSON.stringify(id)});
+            script.namespace = ns;
+            script.finish(ns);
+          `,
+        });
+      try {
+        await {
+          then(f, r) {
+            script.finish = f;
+            script.onerror = r;
+            document.body.appendChild(script);
+          }
+        }
+        return script.namespace;
+      }
+      finally {
+        script.remove();
+      }
+    }
+  }
+  window.import('./entry.mjs').then(console.log);
+</script>

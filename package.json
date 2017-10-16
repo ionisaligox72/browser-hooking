@@ -1,0 +1,14 @@
+{
+  "name": "browser-hooking",
+  "version": "0.0.0",
+  "description": "experiments towards a node and web compat loader implementation",
+  "scripts": {
+    "start": "http-server"
+  },
+  "devDependencies": {
+    "http-server": "^0.10.0"
+  },
+  "keywords": ["esm", "mjs"],
+  "author": "bradleymeck",
+  "license": "ISC"
+}
